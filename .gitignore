@@ -29,3 +29,29 @@ ehthumbs.db
 # IDE / Editor files
 .vscode/
 .idea/
+
+# Environment variables & secrets (expand if needed)
+*.env.*
+secrets.py
+.env.example   # keep if you have a template, but ignore real ones
+
+# Coverage / test reports
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+
+# Migrations backups or temp files (sometimes created)
+migrations/__pycache__/
+
+# PyCharm / VS Code workspace files (you already have .idea/ and .vscode/)
+*.sublime-workspace
+*.sublime-project
+
+# macOS junk (harmless on Windows, but good for cross-platform)
+.DS_Store
+
+# Node.js / frontend stuff (if you add React/Vue/Tailwind later)
+node_modules/
+npm-debug.log
+yarn-error.log
