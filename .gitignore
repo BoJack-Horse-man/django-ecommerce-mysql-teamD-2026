@@ -1,0 +1,31 @@
+# Virtual environment
+venv/
+.env
+.env.local
+
+# Python cache & compiled files
+__pycache__/
+*.pyc
+*.py[cod]
+*.pyo
+*.pyd
+
+# Django defaults
+*.log
+*.pot
+db.sqlite3
+media/
+staticfiles/
+
+# Logs for AI Native methodology
+ME.log.md
+AI.log.md
+
+# Windows junk
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# IDE / Editor files
+.vscode/
+.idea/

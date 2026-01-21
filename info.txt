@@ -1,0 +1,11 @@
+& .\venv\bin\Activate.ps1
+mysql -u root -p
+
+python manage.py migrate
+
+(venv) PS E:\code\7thseme\ecommerce-django-2026> python manage.py createsuperuser
+Username (leave blank to use 'dede1'): Arman
+Email address: armanmahfuj@gmail.com
+Password: Arman123456
+
+http://127.0.0.1:8000/
