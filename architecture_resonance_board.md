@@ -40,3 +40,24 @@ Browser → URL → View → Model/Service → DB → Rendered Template
 - Use “ME.log.md” to note and correct any hallucinated or suspicious lines
 
 ---
+# Architecture Resonance Board – E-Commerce Project
+
+## High-Level Architecture
+- Presentation: Django Templates + Bootstrap
+- Business Logic: Views + Services
+- Data Access: Models + ORM
+- Persistence: MariaDB (XAMPP) via PyMySQL
+
+## Risks (≥3)
+1. Race condition on stock → overselling
+   Mitigation: @transaction.atomic on checkout
+2. AI hallucinations in generated code
+   Mitigation: Mental execution + ME.log.md + [ME] commits
+3. Anonymous cart lost on session expiry
+   Mitigation: Merge session to DB cart on login
+
+## Decisions
+- Django 4.2.16 for MariaDB 10.4 compatibility
+- PyMySQL for Windows install ease
+
+Next: Product detail view
