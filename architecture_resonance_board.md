@@ -22,3 +22,26 @@ User flow example: Browser → URL → View → Service/Model → DB → Templat
    Mitigation: Validate file types/sizes, use Django's FileField with validators.
 
 Next: Generate models.py spec → Cursor generates code → mental execution → commit [ME].
+
+
+# Architecture Resonance Board - E-Commerce Django Project
+
+## High-Level Architecture
+- Presentation: Templates + Bootstrap (UI)
+- Business Logic: Views + Services (cart, order calc)
+- Data Access: Models + ORM
+- Persistence: XAMPP MariaDB via PyMySQL
+
+Flow: URL → View → Model query → DB → Template
+
+## Risks (≥3)
+1. Stock race condition → overselling
+   Mitigation: @transaction.atomic on checkout
+2. AI hallucinations in code
+   Mitigation: Mental execution + ME.log.md + [ME] commits
+3. Anonymous cart loss on session expiry
+   Mitigation: Merge session to DB on login
+
+## Decisions
+- Django 4.2.16 for MariaDB 10.4 compatibility
+- PyMySQL for Windows ease
