@@ -1,47 +1,42 @@
-# Architecture Resonance Board - E-Commerce Django App
+# Architecture Resonance Board – E-Commerce Django Project
 
 ## High-Level Architecture
-- Presentation Layer: Django Templates + Bootstrap 5 (UI, forms, pages)
-- Application/Business Logic Layer: Views + Services (validation, cart logic, order processing)
-- Data Access Layer: Django Models + ORM (queries, relationships)
-- Persistence Layer: MariaDB (XAMPP) via PyMySQL
 
-User flow example: Browser → URL → View → Service/Model → DB → Template render.
+- **Presentation Layer:** Django Templates + Bootstrap 5 (UI, forms, pages)
+- **Business Logic Layer:** Django Views + Service functions (cart, order processing, validation)
+- **Data Layer:** Django Models & ORM (queries, relationships)
+- **Persistence Layer:** MariaDB (XAMPP) via PyMySQL
 
-## Risks Identified (≥3 required)
-1. **Stock concurrency / overselling**: Multiple users adding low-stock item to cart simultaneously could cause negative stock.
-   Mitigation: Use database transactions (atomic) + optimistic locking on Product.stock.
+**User Flow:**  
+Browser → URL → View → Model/Service → DB → Rendered Template
 
-2. **AI hallucinations in code generation**: LLM may generate incorrect DB fields, insecure auth, or broken flows.
-   Mitigation: Mandatory mental execution + curator review on every non-template line; log hallucinations in ME.log.md.
+---
 
-3. **Session security for cart (unauthenticated users)**: Session hijacking or tampering.
-   Mitigation: Use Django's secure session framework; enable HTTPS in prod; clear expired sessions.
+## Risks & Mitigations
 
-4. **Image upload security** (if added later): Malicious files, large uploads.
-   Mitigation: Validate file types/sizes, use Django's FileField with validators.
+1. **Stock Concurrency / Overselling**  
+   - *Risk:* Two users purchase last items at same time, causing negative stock.
+   - *Mitigation:* Use @transaction.atomic and select_for_update() in checkout to lock product rows and ensure atomic updates.
 
-Next: Generate models.py spec → Cursor generates code → mental execution → commit [ME].
+2. **AI Hallucination in Code Generation**
+   - *Risk:* LLM creates invalid or insecure Django code (bad fields, logic bugs, unsafe auth).
+   - *Mitigation:* Mandatory mental execution (manual, line-by-line logic review), maintain ME.log.md for suspected LLM errors, commit refactorings as [ME].
 
+3. **Cart & Session Security (Unauthenticated Users)**
+   - *Risk:* Session hijack or expiry leads to cart loss or tampering.
+   - *Mitigation:* Use Django’s secure session framework, enable SESSION_COOKIE_SECURE & HTTPS for prod, merge/anonymize cart on login, expire sessions properly.
 
-# Architecture Resonance Board - E-Commerce Django Project
+4. **Image/File Upload Security (future)**
+   - *Risk:* Malicious or huge file uploads could exploit server or eat space.
+   - *Mitigation:* Validate file type/size, use Django FileField with proper validators and storage settings.
 
-## High-Level Architecture
-- Presentation: Templates + Bootstrap (UI)
-- Business Logic: Views + Services (cart, order calc)
-- Data Access: Models + ORM
-- Persistence: XAMPP MariaDB via PyMySQL
+---
 
-Flow: URL → View → Model query → DB → Template
+## Key Decisions
 
-## Risks (≥3)
-1. Stock race condition → overselling
-   Mitigation: @transaction.atomic on checkout
-2. AI hallucinations in code
-   Mitigation: Mental execution + ME.log.md + [ME] commits
-3. Anonymous cart loss on session expiry
-   Mitigation: Merge session to DB on login
+- Use Django 4.2.16 for MariaDB 10.4 compatibility (due to Windows/XAMPP dev environment)
+- PyMySQL as DB backend (works on Windows/XAMPP)
+- Mental execution and curation is required for all LLM-generated code; any “template” or boilerplate must be verified
+- Use “ME.log.md” to note and correct any hallucinated or suspicious lines
 
-## Decisions
-- Django 4.2.16 for MariaDB 10.4 compatibility
-- PyMySQL for Windows ease
+---
