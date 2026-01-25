@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Order #{{ order.pk }} - Confirmation{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="text-center mb-5">
+        <h1 class="text-success mb-3">
+            <i class="fas fa-check-circle me-2"></i> Thank You!
+        </h1>
+        <h3 class="mb-3">Your order <span class="text-primary">#{{ order.pk }}</span> has been placed.</h3>
+        <h4 class="text-muted">
+            Grand Total: <strong class="text-dark">${{ order.total_price|floatformat:2 }}</strong>
+        </h4>
+        <p class="lead text-muted">
+            Status: <span class="badge bg-info fs-6">{{ order.get_status_display }}</span>
+        </p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h5 class="mb-3">Order Items</h5>
+
+            {% if items %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th scope="col">Product</th>
+                                <th scope="col" class="text-center">Quantity</th>
+                                <th scope="col" class="text-end">Unit Price</th>
+                                <th scope="col" class="text-end">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr>
+                                <td>
+                                    <strong>{{ item.product.name }}</strong>
+                                    {% if item.product.category %}
+                                        <br>
+                                        <small class="text-muted">
+                                            Category: {{ item.product.category.name }}
+                                        </small>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">{{ item.quantity }}</td>
+                                <td class="text-end">${{ item.price_at_purchase|floatformat:2 }}</td>
+                                <td class="text-end fw-bold">${{ item.subtotal|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-warning text-center">
+                    No items found in this order.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="text-center mt-5">
+        <a href="{% url 'product_list' %}" class="btn btn-primary btn-lg px-5">
+            <i class="fas fa-shopping-bag me-2"></i> Continue Shopping
+        </a>
+    </div>
+</div>
+{% endblock %}
