@@ -14,7 +14,11 @@
                 <div class="col-md-4 mb-4">
                     <div class="card h-100">
                         <div class="card-body">
-                            <h5 class="card-title">{{ product.name }}</h5>
+                            <h5 class="card-title">{{ product.name }}
+                                <a href="{% url 'product_detail' product.slug %}">{{ product.name }}</a>
+
+                            </h5>
+
                             <p class="card-text">{{ product.description|truncatewords:20 }}</p>
                             <p class="card-text fw-bold">Price: ${{ product.price }}</p>
                             <p class="card-text text-muted">Stock: {{ product.stock }}</p>
