@@ -20,3 +20,9 @@ from django.urls import path
 urlpatterns = [
     path('admin/', admin.site.urls),
 ]
+from django.urls import path
+from shop import views
+
+urlpatterns = [
+    path('', views.product_list, name='product_list'),
+]
