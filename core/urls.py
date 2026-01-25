@@ -16,13 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from shop import views  # make sure this import is present
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-]
-from django.urls import path
-from shop import views
-
-urlpatterns = [
-    path('', views.product_list, name='product_list'),
+    path('admin/', admin.site.urls),          # ← Add this line!
+    path('', views.product_list, name='product_list'),  # your product catalog """
 ]
