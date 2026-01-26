@@ -35,6 +35,10 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
+LOGIN_URL = '/admin/login/'  # uses Django admin login for simplicity
+LOGIN_REDIRECT_URL = '/cart/'  # after login, back to cart
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 # Application definition
 
 INSTALLED_APPS = [

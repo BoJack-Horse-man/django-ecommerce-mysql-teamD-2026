@@ -24,6 +24,7 @@ urlpatterns = [
     # Product listing and detail (make sure product detail route is last to avoid conflicts)
     path('', views.product_list, name='product_list'),
     path('<slug:slug>/', views.product_detail, name='product_detail'),
+    path('profile/', views.user_profile, name='user_profile'),
 ]
 
 if settings.DEBUG:
