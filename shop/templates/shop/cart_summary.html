@@ -1,69 +1,76 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
 {% block title %}Your Cart - Store{% endblock %}
 
 {% block content %}
 <div class="container my-5">
+    <h1 class="mb-4 text-center">Your Cart</h1>
 
-    <h1 class="mb-4">Your Cart</h1>
+    {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 
     {% if cart_items %}
         <div class="table-responsive">
-            <table class="table table-hover align-middle">
+            <table class="table table-hover table-bordered align-middle">
                 <thead class="table-dark">
-                <tr>
-                    <th>Product</th>
-                    <th>Price</th>
-                    <th>Quantity</th>
-                    <th>Subtotal</th>
-                    <th>Actions</th>
-                </tr>
+                    <tr>
+                        <th scope="col">Product</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">Quantity</th>
+                        <th scope="col">Subtotal</th>
+                        <th scope="col">Actions</th>
+                    </tr>
                 </thead>
                 <tbody>
-                {% for item in cart_items %}
-                    <tr>
-                        <td>
-                            <strong>{{ item.product.name }}</strong>
-                            {% if item.product.category %}
-                                <br><small class="text-muted">Category: {{ item.product.category.name }}</small>
-                            {% endif %}
-                        </td>
-                        <td>${{ item.product.price|floatformat:2 }}</td>
-                        <td>
-                            <form method="post" action="{% url 'cart_update' item.product.id %}" class="d-inline" aria-label="Update quantity for {{ item.product.name }}">
-                                {% csrf_token %}
-                                <label for="quantity-{{ item.product.id }}" class="visually-hidden">
-                                    Quantity for {{ item.product.name }}
-                                </label>
-                                <input
-                                    type="number"
-                                    id="quantity-{{ item.product.id }}"
-                                    name="quantity"
-                                    value="{{ item.quantity }}"
-                                    min="1"
-                                    {% if item.product.stock > 0 %}
-                                        max="{{ item.product.stock }}"
-                                    {% endif %}
-                                    class="form-control w-auto d-inline"
-                                    style="width: 80px;"
-                                    placeholder="Qty"
-                                    required
-                                >
-                                <button type="submit" class="btn btn-sm btn-outline-primary ms-2">Update</button>
-                            </form>
-                        </td>
-                        <td>${{ item.subtotal|floatformat:2 }}</td>
-                        <td>
-                            <form method="post" action="{% url 'cart_update' item.product.id %}" class="d-inline" aria-label="Remove {{ item.product.name }} from cart">
-                                {% csrf_token %}
-                                <input type="hidden" name="quantity" value="0">
-                                <button type="submit" class="btn btn-sm btn-danger" title="Remove from cart">
-                                    <i class="fas fa-trash"></i> Remove
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                {% endfor %}
+                    {% for item in cart_items %}
+                        <tr>
+                            <td>
+                                <strong>{{ item.product.name }}</strong>
+                                {% if item.product.category %}
+                                    <br>
+                                    <small class="text-muted">Category: {{ item.product.category.name }}</small>
+                                {% endif %}
+                            </td>
+                            <td>${{ item.product.price|floatformat:2 }}</td>
+                            <td>
+                                <form method="post" action="{% url 'cart_update' item.product.id %}" class="d-inline" aria-label="Update quantity for {{ item.product.name }}">
+                                    {% csrf_token %}
+                                    <label for="quantity-{{ item.product.id }}" class="visually-hidden">Quantity</label>
+                                    <input
+                                        type="number"
+                                        id="quantity-{{ item.product.id }}"
+                                        name="quantity"
+                                        value="{{ item.quantity }}"
+                                        min="0"
+                                        {% if item.product.stock > 0 %}max="{{ item.product.stock }}"{% endif %}
+                                        class="form-control w-auto d-inline"
+                                        style="width: 80px;"
+                                        placeholder="Qty"
+                                        required
+                                    >
+                                    <button type="submit" class="btn btn-sm btn-outline-primary ms-2">Update</button>
+                                </form>
+                            </td>
+                            <td>${{ item.subtotal|floatformat:2 }}</td>
+                            <td>
+                                <form method="post" action="{% url 'cart_update' item.product.id %}" class="d-inline" aria-label="Remove {{ item.product.name }} from cart">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="quantity" value="0">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Remove from cart">
+                                        <i class="fas fa-trash"></i> Remove
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -71,25 +78,17 @@
         <div class="text-end mt-4">
             <h4>Grand Total: <strong>${{ total|floatformat:2 }}</strong></h4>
             {% if user.is_authenticated %}
-                <a href="{% url 'checkout' %}" class="btn btn-success btn-lg mt-3">Proceed to Checkout</a>
+                <a href="{% url 'checkout' %}" class="btn btn-success btn-lg mt-3 px-5">Proceed to Checkout</a>
             {% else %}
-                <a href="{% url 'login' %}?next={% url 'checkout' %}" class="btn btn-secondary btn-lg mt-3">Login to Checkout</a>
+                <a href="{% url 'login' %}?next={% url 'checkout' %}" class="btn btn-secondary btn-lg mt-3 px-5">Login to Checkout</a>
             {% endif %}
         </div>
     {% else %}
-        <div class="alert alert-info text-center">
-            <h4>Your cart is empty</h4>
-            <p>Start shopping now!</p>
-            <a href="{% url 'product_list' %}" class="btn btn-primary">Browse Products</a>
+        <div class="alert alert-info text-center py-5">
+            <h4 class="mb-3">Your cart is empty</h4>
+            <p class="lead mb-4">Start shopping now!</p>
+            <a href="{% url 'product_list' %}" class="btn btn-primary btn-lg px-5">Browse Products</a>
         </div>
     {% endif %}
 </div>
-{% if user.is_authenticated %}
-    <a href="{% url 'checkout' %}" class="btn btn-success btn-lg mt-3">Proceed to Checkout</a>
-{% else %}
-    <a href="{% url 'login' %}?next={% url 'checkout' %}" class="btn btn-secondary btn-lg mt-3">
-        Login to Checkout
-    </a>
-{% endif %}
-
 {% endblock %}

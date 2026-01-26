@@ -266,3 +266,14 @@ def user_profile(request):
         'orders': orders,
     }
     return render(request, 'shop/user_profile.html', context)
+
+@login_required
+def fake_pay(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    if order.status == Order.STATUS_PENDING:
+        order.status = Order.STATUS_SHIPPED  # or "paid"
+        order.save()
+        messages.success(request, "Payment successful (simulation)! Order is now processing.")
+    else:
+        messages.info(request, "Order already processed.")
+    return redirect('order_confirmation', order_id=order.pk)

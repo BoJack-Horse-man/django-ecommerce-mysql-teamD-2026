@@ -5,13 +5,19 @@ from django.db import models
 from django.utils.text import slugify
 
 from django.conf import settings
-from django.conf import settings
+
+
+
+    
 
 User = get_user_model()
 
 class UserProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     photo = models.ImageField(upload_to='users/', blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s profile"
 
 class Category(models.Model):
     name = models.CharField(max_length=255, unique=True)

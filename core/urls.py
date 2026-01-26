@@ -25,6 +25,7 @@ urlpatterns = [
     path('', views.product_list, name='product_list'),
     path('<slug:slug>/', views.product_detail, name='product_detail'),
     path('profile/', views.user_profile, name='user_profile'),
+    path('order/<int:order_id>/pay/', views.fake_pay, name='fake_pay'),
 ]
 
 if settings.DEBUG:
