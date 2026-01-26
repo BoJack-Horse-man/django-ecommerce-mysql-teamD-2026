@@ -8,6 +8,8 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from .models import Product, Category, Order, OrderItem, UserProfile
 from .forms import UserProfileForm  # Ensure this form exists for the profile form
+from django.contrib.auth.decorators import login_required
+from .forms import UserProfileForm
 
 def register(request):
     if request.method == 'POST':
@@ -242,7 +244,25 @@ def order_confirmation(request, order_id):
         'total': order.total_price,
     })
 
+
 @login_required
 def user_profile(request):
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profile photo updated successfully!")
+            return redirect('user_profile')
+    else:
+        form = UserProfileForm(instance=profile)
+
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
-    return render(request, 'shop/user_profile.html', {'orders': orders})
+
+    context = {
+        'profile': profile,
+        'form': form,
+        'orders': orders,
+    }
+    return render(request, 'shop/user_profile.html', context)

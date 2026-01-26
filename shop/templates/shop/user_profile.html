@@ -6,7 +6,7 @@
 <div class="container my-5">
     <h1 class="mb-5 text-center">My Profile</h1>
 
-    <!-- User Info Card -->
+    <!-- User Info & Photo Card -->
     <div class="card shadow-sm mb-5">
         <div class="card-body">
             <div class="row align-items-center">
@@ -15,7 +15,7 @@
                     {% if profile.photo %}
                         <img src="{{ profile.photo.url }}" alt="Profile photo" class="img-fluid rounded-circle shadow" style="max-width: 160px; object-fit: cover; border: 4px solid #fff;">
                     {% else %}
-                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center shadow" style="width: 160px; height: 160px; margin: 0 auto;">
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center shadow mx-auto" style="width: 160px; height: 160px;">
                             <i class="fas fa-user fa-5x text-muted"></i>
                         </div>
                         <p class="text-muted mt-2">No photo uploaded</p>
@@ -24,9 +24,9 @@
 
                 <!-- User Details -->
                 <div class="col-md-9">
-                    <h4 class="card-title"><strong>Username:</strong> {{ user.username }}</h4>
-                    <p class="card-text"><strong>Email:</strong> {{ user.email|default:"Not set" }}</p>
-                    <p class="card-text"><strong>Joined:</strong> {{ user.date_joined|date:"Y-m-d" }}</p>
+                    <h5><strong>Username:</strong> {{ user.username }}</h5>
+                    <p><strong>Email:</strong> {{ user.email|default:"Not set" }}</p>
+                    <p><strong>Joined:</strong> {{ user.date_joined|date:"Y-m-d" }}</p>
                 </div>
             </div>
         </div>
