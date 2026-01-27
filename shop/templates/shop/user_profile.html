@@ -24,9 +24,9 @@
 
                 <!-- User Details -->
                 <div class="col-md-9">
-                    <h5><strong>Username:</strong> {{ user.username }}</h5>
-                    <p><strong>Email:</strong> {{ user.email|default:"Not set" }}</p>
-                    <p><strong>Joined:</strong> {{ user.date_joined|date:"Y-m-d" }}</p>
+                    <h4 class="card-title"><strong>Username:</strong> {{ user.username }}</h4>
+                    <p class="card-text"><strong>Email:</strong> {{ user.email|default:"Not set" }}</p>
+                    <p class="card-text"><strong>Joined:</strong> {{ user.date_joined|date:"Y-m-d" }}</p>
                 </div>
             </div>
         </div>
