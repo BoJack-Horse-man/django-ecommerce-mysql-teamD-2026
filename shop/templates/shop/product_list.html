@@ -1,6 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Products{% endblock %}
 
+{% block extra_css %}
+<style>
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <form method="get" class="row g-3 align-items-end">
@@ -27,30 +36,37 @@
     </form>
 </div>
 <div class="container my-5">
-    <h1 class="mb-4">Products</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Products</h1>
+        {% if products %}
+            <p class="text-muted mb-0">
+                Showing {{ products.start_index }}-{{ products.end_index }} of {{ products.paginator.count }} products
+            </p>
+        {% endif %}
+    </div>
     {% if products %}
         <div class="row">
             {% for product in products %}
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100">
+                <div class="col-md-4 col-lg-3 mb-4">
+                    <div class="card h-100 shadow-sm" style="transition: transform 0.3s ease, box-shadow 0.3s ease; border: none; border-radius: 12px; overflow: hidden;">
                         {% if product.image %}
-                            <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                            <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 250px; object-fit: cover;">
                         {% else %}
-                            <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height:200px;">
-                                <span class="text-light">No Image</span>
+                            <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height:250px;">
+                                <i class="fas fa-image text-light" style="font-size: 3rem;"></i>
                             </div>
                         {% endif %}
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title">
-                                <a href="{% url 'product_detail' product.slug %}">{{ product.name }}</a>
+                                <a href="{% url 'product_detail' product.slug %}" class="text-decoration-none text-dark">{{ product.name }}</a>
                             </h5>
-                            <p class="card-text">{{ product.description|truncatewords:20 }}</p>
-                            <p class="card-text fw-bold">Price: ${{ product.price|floatformat:2 }}</p>
-                            <p class="card-text text-muted">
+                            <p class="card-text text-muted small">{{ product.description|truncatewords:15 }}</p>
+                            <p class="card-text fw-bold text-primary mb-2" style="font-size: 1.25rem;">${{ product.price|floatformat:2 }}</p>
+                            <p class="card-text text-muted small mb-3">
                                 {% if product.stock > 0 %}
-                                    Stock: {{ product.stock }}
+                                    <i class="fas fa-check-circle text-success"></i> In Stock ({{ product.stock }})
                                 {% else %}
-                                    <span class="text-danger">Out of stock</span>
+                                    <i class="fas fa-times-circle text-danger"></i> Out of stock
                                 {% endif %}
                             </p>
                             <a href="{% url 'product_detail' product.slug %}" class="btn btn-primary mt-auto">View Details</a>
@@ -59,9 +75,54 @@
                 </div>
             {% endfor %}
         </div>
+        
+        <!-- Pagination -->
+        {% if products.has_other_pages %}
+        <nav aria-label="Product pagination" class="mt-5">
+            <ul class="pagination justify-content-center">
+                {% if products.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if min_price %}&min_price={{ min_price }}{% endif %}{% if max_price %}&max_price={{ max_price }}{% endif %}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ products.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if min_price %}&min_price={{ min_price }}{% endif %}{% if max_price %}&max_price={{ max_price }}{% endif %}">Previous</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">First</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Previous</span>
+                    </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">
+                        Page {{ products.number }} of {{ products.paginator.num_pages }}
+                    </span>
+                </li>
+                
+                {% if products.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ products.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if min_price %}&min_price={{ min_price }}{% endif %}{% if max_price %}&max_price={{ max_price }}{% endif %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ products.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if min_price %}&min_price={{ min_price }}{% endif %}{% if max_price %}&max_price={{ max_price }}{% endif %}">Last</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Last</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
     {% else %}
-        <div class="alert alert-warning" role="alert">
-            No products available.
+        <div class="alert alert-warning text-center" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>No products found matching your criteria.
         </div>
     {% endif %}
 </div>

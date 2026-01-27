@@ -11,7 +11,7 @@ urlpatterns = [
 
     # Authentication
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(next_page='product_list'), name='logout'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='home'), name='logout'),
     path('register/', views.register, name='register'),
     path('profile/', views.user_profile, name='user_profile'),
 
@@ -23,10 +23,12 @@ urlpatterns = [
     path('order/<int:order_id>/', views.order_confirmation, name='order_confirmation'),
     path('order/<int:order_id>/pay/', views.fake_pay, name='fake_pay'),
 
+    # Home & Products
+    path('', views.home, name='home'),
+    path('products/', views.product_list, name='product_list'),
+    
     # Product Routes (generic slug MUST be last!)
-    path('', views.product_list, name='product_list'),
     path('<slug:slug>/', views.product_detail, name='product_detail'),
-    path('profile/', views.user_profile, name='user_profile'),
 ]
 
 # Serve media files during development (only when DEBUG=True)

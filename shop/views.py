@@ -6,6 +6,7 @@ from django.db import transaction
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import Product, Category, Order, OrderItem, UserProfile
 from .forms import UserProfileForm
 
@@ -24,6 +25,21 @@ def save_cart(request, cart):
     """Save cart to session."""
     request.session['cart'] = cart
     request.session.modified = True
+
+# === Home View ===
+
+def home(request):
+    """Professional home page with featured products and information."""
+    featured_products = Product.objects.filter(stock__gt=0).order_by('-created_at')[:6]
+    categories = Category.objects.all()[:6]
+    total_products = Product.objects.filter(stock__gt=0).count()
+    
+    context = {
+        'featured_products': featured_products,
+        'categories': categories,
+        'total_products': total_products,
+    }
+    return render(request, 'shop/home.html', context)
 
 # === Product Views ===
 
@@ -52,8 +68,19 @@ def product_list(request):
         except Exception:
             messages.warning(request, "Invalid maximum price.")
 
+    # Pagination: 12 products per page
+    paginator = Paginator(products, 12)
+    page = request.GET.get('page', 1)
+    
+    try:
+        products_page = paginator.page(page)
+    except PageNotAnInteger:
+        products_page = paginator.page(1)
+    except EmptyPage:
+        products_page = paginator.page(paginator.num_pages)
+
     context = {
-        'products': products,
+        'products': products_page,
         'query': query,
         'categories': Category.objects.all(),
         'selected_category': category_id,
@@ -225,7 +252,7 @@ def register(request):
             user = form.save()
             login(request, user)
             messages.success(request, "Registration successful! Welcome.")
-            return redirect('product_list')
+            return redirect('home')
         else:
             messages.error(request, "Please correct the errors below.")
     else:
