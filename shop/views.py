@@ -31,9 +31,12 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from .models import (
     Product, Category, Order, OrderItem, UserProfile,
-    ProductReview, Wishlist, NewsletterSubscriber
+    ProductReview, Wishlist, NewsletterSubscriber, ProductRequest
 )
-from .forms import UserProfileForm, ContactForm, ReviewForm, NewsletterForm
+from .forms import (
+    UserProfileForm, ContactForm, ReviewForm, NewsletterForm,
+    RegisterForm, UserUpdateForm, ProductRequestForm
+)
 
 # === Helper Functions ===
 
@@ -113,12 +116,21 @@ def home(request):
         stock__gt=0
     ) if recently_viewed_ids else []
     
+    # New arrivals and top-rated products for homepage highlights
+    new_products = Product.objects.filter(stock__gt=0).order_by('-created_at')[:6]
+    top_products = Product.objects.filter(stock__gt=0).annotate(
+        avg_rating=Avg('reviews__rating'),
+        total_reviews=Count('reviews')
+    ).order_by('-avg_rating', '-total_reviews', '-created_at')[:6]
+
     context = {
         'featured_products': featured_products,
         'categories': categories,
         'total_products': total_products,
         'total_categories': total_categories,
         'recently_viewed': recently_viewed,
+        'new_products': new_products,
+        'top_products': top_products,
     }
     return render(request, 'shop/home.html', context)
 
@@ -511,17 +523,22 @@ def order_confirmation(request, order_id):
 # === User Profile & Auth Views ===
 
 def register(request):
+    """Customer registration with extra details (email, phone, address)."""
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
+            profile, _ = UserProfile.objects.get_or_create(user=user)
+            profile.phone = (form.cleaned_data.get('phone') or '').strip()
+            profile.address = (form.cleaned_data.get('address') or '').strip()
+            profile.save()
+
             login(request, user)
             messages.success(request, "Registration successful! Welcome.")
             return redirect('home')
-        else:
-            messages.error(request, "Please correct the errors below.")
+        messages.error(request, "Please correct the errors below.")
     else:
-        form = UserCreationForm()
+        form = RegisterForm()
     return render(request, 'registration/register.html', {'form': form})
 
 @login_required
@@ -536,27 +553,69 @@ def user_profile(request):
     profile, created = UserProfile.objects.get_or_create(user=request.user)
     
     if request.method == 'POST':
-        form = UserProfileForm(request.POST, request.FILES, instance=profile)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Profile updated successfully!")
-            return redirect('user_profile')
+        form_name = request.POST.get('form_name', '')
+        if form_name == 'user':
+            user_form = UserUpdateForm(request.POST, instance=request.user)
+            profile_form = UserProfileForm(instance=profile)
+            if user_form.is_valid():
+                user_form.save()
+                messages.success(request, "Account details updated.")
+                return redirect('user_profile')
+        else:
+            profile_form = UserProfileForm(request.POST, request.FILES, instance=profile)
+            user_form = UserUpdateForm(instance=request.user)
+            if profile_form.is_valid():
+                profile_form.save()
+                messages.success(request, "Delivery details updated.")
+                return redirect('user_profile')
     else:
-        form = UserProfileForm(instance=profile)
+        profile_form = UserProfileForm(instance=profile)
+        user_form = UserUpdateForm(instance=request.user)
 
     # Get user's orders (newest first)
     orders = Order.objects.filter(user=request.user).order_by('-created_at')[:10]
     
     # Get user's wishlist
     wishlist_items = Wishlist.objects.filter(user=request.user).select_related('product')[:10]
+
+    # Product requests preview
+    product_requests = ProductRequest.objects.filter(user=request.user)[:10]
     
     context = {
         'profile': profile,
-        'form': form,
+        'profile_form': profile_form,
+        'user_form': user_form,
         'orders': orders,
         'wishlist_items': wishlist_items,
+        'product_requests': product_requests,
     }
     return render(request, 'shop/user_profile.html', context)
+
+
+@login_required
+def wishlist(request):
+    """Wishlist page showing all saved products for the user."""
+    items = Wishlist.objects.filter(user=request.user).select_related('product').order_by('-created_at')
+    return render(request, 'shop/wishlist.html', {'items': items})
+
+
+@login_required
+def product_requests(request):
+    """Product requests page (customers can request products the store doesn't have)."""
+    if request.method == 'POST':
+        form = ProductRequestForm(request.POST, request.FILES)
+        if form.is_valid():
+            pr = form.save(commit=False)
+            pr.user = request.user
+            pr.save()
+            messages.success(request, "Your product request has been submitted.")
+            return redirect('product_requests')
+        messages.error(request, "Please correct the errors in your request.")
+    else:
+        form = ProductRequestForm()
+
+    requests_qs = ProductRequest.objects.filter(user=request.user)
+    return render(request, 'shop/product_requests.html', {'form': form, 'requests': requests_qs})
 @login_required
 def fake_pay(request, order_id):
     """
@@ -637,7 +696,7 @@ def add_review(request, product_id):
         return redirect('product_detail', slug=product.slug)
     
     if request.method == 'POST':
-        form = ReviewForm(request.POST)
+        form = ReviewForm(request.POST, request.FILES)
         if form.is_valid():
             review = form.save(commit=False)
             review.user = request.user

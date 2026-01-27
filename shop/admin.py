@@ -12,7 +12,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from .models import (
     UserProfile, Category, Product, Order, OrderItem,
-    ProductReview, Wishlist, NewsletterSubscriber
+    ProductReview, Wishlist, NewsletterSubscriber, ProductRequest
 )
 
 
@@ -246,3 +246,14 @@ class NewsletterSubscriberAdmin(admin.ModelAdmin):
         queryset.update(subscribed=False, unsubscribed_at=timezone.now())
         self.message_user(request, f"{queryset.count()} subscribers marked as unsubscribed.")
     mark_unsubscribed.short_description = "Mark selected as unsubscribed"
+
+
+@admin.register(ProductRequest)
+class ProductRequestAdmin(admin.ModelAdmin):
+    """Admin interface for product requests submitted by users."""
+    list_display = ['product_name', 'user', 'status', 'desired_price', 'created_at']
+    list_filter = ['status', 'created_at']
+    search_fields = ['product_name', 'details', 'user__username', 'user__email']
+    readonly_fields = ['created_at', 'updated_at', 'user', 'reference_image']
+    list_editable = ['status']
+    ordering = ['-created_at']

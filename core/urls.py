@@ -12,7 +12,7 @@ Example: {% url 'product_list' %} instead of hardcoding '/products/'
 """
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, reverse_lazy
 from django.conf import settings
 from django.conf.urls.static import static
 from shop import views
@@ -28,6 +28,21 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(next_page='home'), name='logout'),
     path('register/', views.register, name='register'),
     path('profile/', views.user_profile, name='user_profile'),
+    path(
+        'password-change/',
+        auth_views.PasswordChangeView.as_view(
+            template_name='registration/password_change_form.html',
+            success_url=reverse_lazy('password_change_done')
+        ),
+        name='password_change'
+    ),
+    path(
+        'password-change/done/',
+        auth_views.PasswordChangeDoneView.as_view(
+            template_name='registration/password_change_done.html'
+        ),
+        name='password_change_done'
+    ),
 
     # Cart & Checkout routes
     path('cart/', views.cart_summary, name='cart_summary'),
@@ -40,6 +55,7 @@ urlpatterns = [
     # Wishlist routes
     path('wishlist/add/<int:product_id>/', views.add_to_wishlist, name='add_to_wishlist'),
     path('wishlist/remove/<int:product_id>/', views.remove_from_wishlist, name='remove_from_wishlist'),
+    path('wishlist/', views.wishlist, name='wishlist'),
 
     # Review routes
     path('review/add/<int:product_id>/', views.add_review, name='add_review'),
@@ -48,6 +64,9 @@ urlpatterns = [
     path('about/', views.about_us, name='about_us'),
     path('contact/', views.contact_us, name='contact_us'),
     path('faq/', views.faq, name='faq'),
+
+    # Product requests (customer feature)
+    path('requests/', views.product_requests, name='product_requests'),
 
     # Newsletter routes
     path('newsletter/subscribe/', views.newsletter_subscribe, name='newsletter_subscribe'),

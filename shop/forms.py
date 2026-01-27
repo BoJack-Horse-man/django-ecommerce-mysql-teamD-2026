@@ -9,8 +9,11 @@ handles validation, and can save directly to database.
 """
 
 from django import forms
-from django.core.validators import MinValueValidator, MaxValueValidator
-from .models import UserProfile, ProductReview, NewsletterSubscriber
+from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import UserCreationForm
+from .models import UserProfile, ProductReview, NewsletterSubscriber, ProductRequest
+
+User = get_user_model()
 
 
 class UserProfileForm(forms.ModelForm):
@@ -44,7 +47,7 @@ class ReviewForm(forms.ModelForm):
     """
     class Meta:
         model = ProductReview
-        fields = ['rating', 'title', 'comment']
+        fields = ['rating', 'title', 'comment', 'image']
         widgets = {
             'rating': forms.NumberInput(attrs={
                 'class': 'form-control',
@@ -62,6 +65,7 @@ class ReviewForm(forms.ModelForm):
                 'rows': 5,
                 'placeholder': 'Write your review here...'
             }),
+            'image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
     
     def clean_rating(self):
@@ -149,3 +153,53 @@ class NewsletterForm(forms.ModelForm):
         if email:
             return email.lower().strip()
         return email
+
+
+class RegisterForm(UserCreationForm):
+    """Registration form with customer details (email/phone/address)."""
+    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    phone = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    address = forms.CharField(required=False, widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
+
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = ("username", "email", "password1", "password2", "phone", "address")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name in ["username", "password1", "password2"]:
+            if name in self.fields:
+                self.fields[name].widget.attrs.update({"class": "form-control"})
+                self.fields[name].help_text = ""
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = (self.cleaned_data.get("email") or "").strip()
+        if commit:
+            user.save()
+        return user
+
+
+class UserUpdateForm(forms.ModelForm):
+    """Update core User fields (name + email)."""
+    class Meta:
+        model = User
+        fields = ["first_name", "last_name", "email"]
+        widgets = {
+            "first_name": forms.TextInput(attrs={"class": "form-control"}),
+            "last_name": forms.TextInput(attrs={"class": "form-control"}),
+            "email": forms.EmailInput(attrs={"class": "form-control"}),
+        }
+
+
+class ProductRequestForm(forms.ModelForm):
+    """Customer product requests (request a product we don't have)."""
+    class Meta:
+        model = ProductRequest
+        fields = ["product_name", "details", "desired_price", "reference_image"]
+        widgets = {
+            "product_name": forms.TextInput(attrs={"class": "form-control"}),
+            "details": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
+            "desired_price": forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+            "reference_image": forms.ClearableFileInput(attrs={"class": "form-control"}),
+        }

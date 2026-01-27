@@ -313,6 +313,8 @@ class ProductReview(models.Model):
     )
     title = models.CharField(max_length=200)
     comment = models.TextField()
+    # Optional customer photo (e.g., delivered product photo / real-life photo)
+    image = models.ImageField(upload_to='reviews/', blank=True, null=True)
     verified_purchase = models.BooleanField(
         default=False,  # Mark as verified if user actually bought the product
         help_text="True if reviewer purchased this product"
@@ -377,3 +379,37 @@ class NewsletterSubscriber(models.Model):
     def __str__(self):
         """String representation for admin panel."""
         return self.email
+
+
+class ProductRequest(models.Model):
+    """
+    Customer product request / "request a product" feature.
+
+    Common on professional stores: customers request products not currently listed.
+    """
+    STATUS_NEW = "new"
+    STATUS_REVIEWING = "reviewing"
+    STATUS_APPROVED = "approved"
+    STATUS_REJECTED = "rejected"
+
+    STATUS_CHOICES = [
+        (STATUS_NEW, "New"),
+        (STATUS_REVIEWING, "Reviewing"),
+        (STATUS_APPROVED, "Approved"),
+        (STATUS_REJECTED, "Rejected"),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="product_requests")
+    product_name = models.CharField(max_length=255)
+    details = models.TextField(blank=True)
+    desired_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    reference_image = models.ImageField(upload_to="product_requests/", blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_NEW)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"{self.user.username}: {self.product_name} ({self.status})"

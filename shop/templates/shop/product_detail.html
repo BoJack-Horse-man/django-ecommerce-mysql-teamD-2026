@@ -22,6 +22,13 @@
         border-radius: 12px;
         border: 1px solid #dee2e6;
     }
+    .star {
+        color: #f5c518;
+    }
+    .review-card img {
+        max-height: 140px;
+        object-fit: cover;
+    }
 </style>
 {% endblock %}
 
@@ -41,11 +48,24 @@
 
         <!-- Product Details -->
         <div class="col-md-7">
-            <h1 class="mb-3">{{ product.name }}</h1>
+            <h1 class="mb-2">{{ product.name }}</h1>
+            {% with avg=review_stats.avg_rating|default:0 total=review_stats.total_reviews|default:0 %}
+                <div class="d-flex align-items-center mb-3">
+                    <div class="me-3">
+                        <span class="h5 mb-0">
+                            {% if avg %}{{ avg|floatformat:1 }}{% else %}0.0{% endif %}
+                        </span>
+                        <span class="text-warning">
+                            {% for i in "12345" %}
+                                <i class="fas fa-star{% if forloop.counter <= avg %} star{% else %} text-muted opacity-50{% endif %}"></i>
+                            {% endfor %}
+                        </span>
+                        <span class="text-muted small ms-1">({{ total }} reviews)</span>
+                    </div>
+                </div>
+            {% endwith %}
 
-            <h3 class="text-primary mb-4">
-                ${{ product.price|floatformat:2 }}
-            </h3>
+            <h3 class="text-primary mb-4">${{ product.price|floatformat:2 }}</h3>
 
             <div class="mb-3">
                 <strong>Category:</strong>
@@ -93,10 +113,79 @@
                 </div>
             {% endif %}
 
-            <a href="{% url 'product_list' %}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i> Back to Products
-            </a>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'product_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Products
+                </a>
+
+                {% if user.is_authenticated %}
+                    {% if in_wishlist %}
+                        <form method="post" action="{% url 'remove_from_wishlist' product.id %}">
+                            {% csrf_token %}
+                            <button class="btn btn-outline-danger" type="submit">
+                                <i class="fas fa-heart-broken me-1"></i> Remove from Wishlist
+                            </button>
+                        </form>
+                    {% else %}
+                        <form method="post" action="{% url 'add_to_wishlist' product.id %}">
+                            {% csrf_token %}
+                            <button class="btn btn-outline-primary" type="submit">
+                                <i class="fas fa-heart me-1"></i> Save to Wishlist
+                            </button>
+                        </form>
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-outline-primary">
+                        <i class="fas fa-heart me-1"></i> Login to save
+                    </a>
+                {% endif %}
+            </div>
         </div>
     </div>
+</div>
+
+<!-- Reviews -->
+<div class="container mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0">Customer Reviews</h3>
+        {% if can_review %}
+            <a class="btn btn-sm btn-primary" href="{% url 'add_review' product.id %}">
+                <i class="fas fa-star me-1"></i> Write a review
+            </a>
+        {% endif %}
+    </div>
+
+    {% if reviews %}
+        <div class="row g-3">
+            {% for review in reviews %}
+                <div class="col-md-6">
+                    <div class="card review-card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h6 class="mb-1">{{ review.title }}</h6>
+                                    <div class="text-warning">
+                                        {% for i in "12345" %}
+                                            <i class="fas fa-star{% if forloop.counter <= review.rating %} star{% else %} text-muted opacity-50{% endif %}"></i>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <span class="badge bg-secondary">{{ review.created_at|date:"Y-m-d" }}</span>
+                            </div>
+                            <p class="mb-2">{{ review.comment }}</p>
+                            {% if review.image %}
+                                <img src="{{ review.image.url }}" alt="Review photo" class="img-fluid rounded mb-2">
+                            {% endif %}
+                            <small class="text-muted">by {{ review.user.username }}{% if review.verified_purchase %} • Verified purchase{% endif %}</small>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            No reviews yet. Be the first to share your experience!
+        </div>
+    {% endif %}
 </div>
 {% endblock %}

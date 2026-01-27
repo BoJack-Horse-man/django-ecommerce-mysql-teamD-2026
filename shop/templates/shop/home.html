@@ -234,6 +234,87 @@
 </section>
 {% endif %}
 
+<!-- New Arrivals -->
+{% if new_products %}
+<section class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="section-title mb-0">New Arrivals</h2>
+        <a href="{% url 'product_list' %}?sort=newest" class="btn btn-outline-secondary">See more</a>
+    </div>
+    <div class="row g-4">
+        {% for product in new_products %}
+        <div class="col-md-4 col-lg-4">
+            <div class="card product-card h-100">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                {% else %}
+                    <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height:250px;">
+                        <i class="fas fa-image text-light" style="font-size: 3rem;"></i>
+                    </div>
+                {% endif %}
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">
+                        <a href="{% url 'product_detail' product.slug %}" class="text-decoration-none text-dark">
+                            {{ product.name }}
+                        </a>
+                    </h5>
+                    <p class="card-text text-muted">{{ product.description|truncatewords:15 }}</p>
+                    <div class="mt-auto d-flex justify-content-between align-items-center">
+                        <span class="fw-bold text-primary">${{ product.price|floatformat:2 }}</span>
+                        <a href="{% url 'product_detail' product.slug %}" class="btn btn-sm btn-primary">View</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Top Rated -->
+{% if top_products %}
+<section class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="section-title mb-0">Top Rated</h2>
+        <a href="{% url 'product_list' %}?sort=rating" class="btn btn-outline-secondary">See more</a>
+    </div>
+    <div class="row g-4">
+        {% for product in top_products %}
+        <div class="col-md-4 col-lg-4">
+            <div class="card product-card h-100">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                {% else %}
+                    <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height:250px;">
+                        <i class="fas fa-image text-light" style="font-size: 3rem;"></i>
+                    </div>
+                {% endif %}
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">
+                        <a href="{% url 'product_detail' product.slug %}" class="text-decoration-none text-dark">
+                            {{ product.name }}
+                        </a>
+                    </h5>
+                    <p class="card-text text-muted">{{ product.description|truncatewords:15 }}</p>
+                    <div class="mt-auto d-flex justify-content-between align-items-center">
+                        <div class="text-warning">
+                            {% with avg=product.avg_rating|default:0 %}
+                                {% for i in "12345" %}
+                                    <i class="fas fa-star{% if forloop.counter <= avg %} text-warning{% else %} text-muted opacity-50{% endif %}"></i>
+                                {% endfor %}
+                                <span class="small text-muted ms-1">({{ product.total_reviews|default:0 }} reviews)</span>
+                            {% endwith %}
+                        </div>
+                        <a href="{% url 'product_detail' product.slug %}" class="btn btn-sm btn-primary">View</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
 <!-- Categories Section -->
 {% if categories %}
 <section class="container my-5">
