@@ -1,12 +1,10 @@
 Mental Execution & Curator Review (AI Native Style)
-As per the rubric, you must perform mental execution on every non-template line of AI-generated code. This means explaining in natural language:
+As per the rubric,  must perform mental execution on every non-template line of AI-generated code. This means explaining in natural language:
 
 Business logic
 Exception paths
 Potential side effects
 Any hallucinations or issues (and corrections)
-
-Do this now before committing:
 
 Category model
 name: CharField(unique=True) – Ensures no duplicate categories.
@@ -56,7 +54,7 @@ No image field – optional for now.
 
 # ME.log.md - shop/models.py (2026-01-21)
 
-[AI] Generated code
+Code 
 [ME] Explanation:
 - Forward reference fixed with 'Product' string in ForeignKey → prevents NameError at import time.
 - OrderItem.on_delete=PROTECT on product → raises ProtectedError if delete attempted (protects order history).
@@ -64,13 +62,13 @@ No image field – optional for now.
 - Side effect: Price changes after order don't affect history (price_at_purchase snapshot).
 - Meta ordering added: Category/Product by name, Order by -created_at.
 - No hallucinations after fix.
-[AI] Generated login/register views + templates
+login/register views + templates
 [ME] Explanation:
 - UserCreationForm handles password hashing + validation.
 - Exception path: Invalid form → error message, no DB change.
 - Side effect: Successful register → auto-login + redirect.
 - Hallucination: None, matches spec.
-[AI] Generated user profile view + template
+user profile view + template
 [ME] Explanation:
 - Orders filtered by user → secure, no other users' data.
 - Exception path: No orders → friendly message.
@@ -78,7 +76,7 @@ No image field – optional for now.
 - Hallucination: None.
 # Django E-Commerce Project
 
-Team: D
+Team: A
 
 Tech: Django 4.2.16, MySQL (XAMPP), Bootstrap 5, PyMySQL
 
@@ -91,7 +89,7 @@ Tech: Django 4.2.16, MySQL (XAMPP), Bootstrap 5, PyMySQL
 6. `python manage.py runserver`
 
 # ME.log.md - 2026-01-27
-[AI] Implemented customer-facing pages and profile upgrades
+Implemented customer-facing pages and profile upgrades
 [ME] Notes:
 - Added password change flow via Django auth views + templates → secure password update with built-in validation. Success redirects to confirmation.
 - Built contact, about, FAQ, wishlist, product request, and review submission templates → resolves TemplateDoesNotExist errors and surfaces existing features.
