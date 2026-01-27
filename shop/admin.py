@@ -95,26 +95,49 @@ class OrderItemInline(admin.TabularInline):
     Inline admin for order items.
     
     Why TabularInline? Shows order items in a table within the order admin page.
-    This allows editing order items directly from the order page.
+    This allows viewing order items directly from the order page.
+    
+    Why readonly? Order items shouldn't be modified after order is placed.
+    This preserves order history integrity.
     """
     model = OrderItem
     extra = 0  # Don't show empty forms
-    readonly_fields = ['product', 'quantity', 'price_at_purchase', 'get_subtotal']
+    can_delete = False  # Prevent deleting order items
+    readonly_fields = ['product', 'quantity', 'price_at_purchase', 'subtotal_display']
     
-    def get_subtotal(self, obj):
-        """Display calculated subtotal."""
-        return f"${obj.get_subtotal():.2f}"
-    get_subtotal.short_description = 'Subtotal'
+    def subtotal_display(self, obj):
+        """
+        Display calculated subtotal in admin.
+        
+        Why separate method? Can't use model method directly in readonly_fields.
+        This wrapper formats the output nicely for admin display.
+        """
+        if obj.pk:  # Only calculate if object is saved
+            subtotal = obj.get_subtotal()
+            return f"${subtotal:.2f}"
+        return "-"
+    subtotal_display.short_description = 'Subtotal'
 
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    """Admin interface for orders."""
+    """
+    Admin interface for orders.
+    
+    Allows admins to:
+    - View order details
+    - Change order status (pending -> shipped -> delivered)
+    - Update shipping information
+    - View order items inline
+    """
     list_display = ['id', 'user', 'total_price', 'status', 'item_count', 'created_at']
     list_filter = ['status', 'created_at']
     search_fields = ['user__username', 'user__email', 'id']
-    readonly_fields = ['created_at', 'updated_at']
+    readonly_fields = ['created_at', 'updated_at', 'total_price']  # Total calculated, shouldn't be edited manually
     inlines = [OrderItemInline]  # Show order items on order page
+    
+    # Allow editing status directly from list view for quick updates
+    list_editable = ['status']
     
     fieldsets = (
         ('Order Information', {
@@ -128,6 +151,27 @@ class OrderAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+    
+    # Add actions for bulk status updates
+    actions = ['mark_shipped', 'mark_delivered', 'mark_cancelled']
+    
+    def mark_shipped(self, request, queryset):
+        """Admin action to mark selected orders as shipped."""
+        updated = queryset.filter(status=Order.STATUS_PENDING).update(status=Order.STATUS_SHIPPED)
+        self.message_user(request, f"{updated} order(s) marked as shipped.")
+    mark_shipped.short_description = "Mark selected orders as shipped"
+    
+    def mark_delivered(self, request, queryset):
+        """Admin action to mark selected orders as delivered."""
+        updated = queryset.filter(status__in=[Order.STATUS_PENDING, Order.STATUS_SHIPPED]).update(status=Order.STATUS_DELIVERED)
+        self.message_user(request, f"{updated} order(s) marked as delivered.")
+    mark_delivered.short_description = "Mark selected orders as delivered"
+    
+    def mark_cancelled(self, request, queryset):
+        """Admin action to mark selected orders as cancelled."""
+        updated = queryset.filter(status=Order.STATUS_PENDING).update(status=Order.STATUS_CANCELLED)
+        self.message_user(request, f"{updated} order(s) marked as cancelled.")
+    mark_cancelled.short_description = "Mark selected orders as cancelled"
     
     def item_count(self, obj):
         """Display number of items in order."""

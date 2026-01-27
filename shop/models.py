@@ -280,7 +280,14 @@ class OrderItem(models.Model):
         return f"{self.product.name} x {self.quantity}"
     
     def get_subtotal(self):
-        """Calculate subtotal for this line item."""
+        """
+        Calculate subtotal for this line item.
+        
+        Why check for None? Old orders might have None price_at_purchase if data was migrated.
+        Returns Decimal('0.00') if price is missing to prevent errors.
+        """
+        if self.price_at_purchase is None:
+            return Decimal('0.00')
         return self.quantity * self.price_at_purchase
 
 
