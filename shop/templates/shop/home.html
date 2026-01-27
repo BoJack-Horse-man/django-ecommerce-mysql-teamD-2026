@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+{% block title %}Home - Professional E-Commerce Store{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 100px 0;
+        margin-bottom: 60px;
+    }
+    .hero-section h1 {
+        font-size: 3.5rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+    .hero-section p {
+        font-size: 1.25rem;
+        margin-bottom: 30px;
+    }
+    .feature-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+        height: 100%;
+    }
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+    .feature-icon {
+        font-size: 3rem;
+        color: #667eea;
+        margin-bottom: 20px;
+    }
+    .product-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+        height: 100%;
+    }
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+    .product-card img {
+        height: 250px;
+        object-fit: cover;
+        width: 100%;
+    }
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 50px;
+        text-align: center;
+        color: #333;
+    }
+    .stats-section {
+        background: #f8f9fa;
+        padding: 60px 0;
+        margin: 60px 0;
+    }
+    .stat-item {
+        text-align: center;
+    }
+    .stat-number {
+        font-size: 3rem;
+        font-weight: 700;
+        color: #667eea;
+    }
+    .stat-label {
+        font-size: 1.1rem;
+        color: #666;
+        margin-top: 10px;
+    }
+    .btn-hero {
+        padding: 15px 40px;
+        font-size: 1.1rem;
+        border-radius: 50px;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section" style="margin-top: 0;">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1>Welcome to Our Store</h1>
+                <p>Discover amazing products at unbeatable prices. Shop with confidence and enjoy fast, secure delivery.</p>
+                <a href="{% url 'product_list' %}" class="btn btn-light btn-hero">
+                    <i class="fas fa-shopping-bag me-2"></i>Shop Now
+                </a>
+            </div>
+            <div class="col-lg-6 text-center">
+                <i class="fas fa-store" style="font-size: 200px; opacity: 0.3;"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="container my-5">
+    <h2 class="section-title">Why Choose Us</h2>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card feature-card text-center p-4">
+                <div class="card-body">
+                    <i class="fas fa-shipping-fast feature-icon"></i>
+                    <h4 class="card-title">Fast Shipping</h4>
+                    <p class="card-text">Free shipping on orders over $50. Fast and reliable delivery to your doorstep.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card text-center p-4">
+                <div class="card-body">
+                    <i class="fas fa-shield-alt feature-icon"></i>
+                    <h4 class="card-title">Secure Payment</h4>
+                    <p class="card-text">Your payment information is safe and secure with our encrypted checkout system.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card text-center p-4">
+                <div class="card-body">
+                    <i class="fas fa-undo feature-icon"></i>
+                    <h4 class="card-title">Easy Returns</h4>
+                    <p class="card-text">Not satisfied? Return your purchase within 30 days for a full refund.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card text-center p-4">
+                <div class="card-body">
+                    <i class="fas fa-headset feature-icon"></i>
+                    <h4 class="card-title">24/7 Support</h4>
+                    <p class="card-text">Our customer service team is available around the clock to help you.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card text-center p-4">
+                <div class="card-body">
+                    <i class="fas fa-tags feature-icon"></i>
+                    <h4 class="card-title">Best Prices</h4>
+                    <p class="card-text">We offer competitive prices and regular discounts on our products.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card feature-card text-center p-4">
+                <div class="card-body">
+                    <i class="fas fa-check-circle feature-icon"></i>
+                    <h4 class="card-title">Quality Guaranteed</h4>
+                    <p class="card-text">All products are carefully selected and quality-checked before shipping.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 stat-item">
+                <div class="stat-number">{{ total_products }}+</div>
+                <div class="stat-label">Products Available</div>
+            </div>
+            <div class="col-md-4 stat-item">
+                <div class="stat-number">{{ categories|length }}+</div>
+                <div class="stat-label">Product Categories</div>
+            </div>
+            <div class="col-md-4 stat-item">
+                <div class="stat-number">100%</div>
+                <div class="stat-label">Customer Satisfaction</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products Section -->
+{% if featured_products %}
+<section class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="section-title mb-0">Featured Products</h2>
+        <a href="{% url 'product_list' %}" class="btn btn-outline-primary">View All Products</a>
+    </div>
+    <div class="row g-4">
+        {% for product in featured_products %}
+        <div class="col-md-4 col-lg-4">
+            <div class="card product-card">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                {% else %}
+                    <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height:250px;">
+                        <i class="fas fa-image text-light" style="font-size: 3rem;"></i>
+                    </div>
+                {% endif %}
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">
+                        <a href="{% url 'product_detail' product.slug %}" class="text-decoration-none text-dark">
+                            {{ product.name }}
+                        </a>
+                    </h5>
+                    <p class="card-text text-muted">{{ product.description|truncatewords:15 }}</p>
+                    <div class="mt-auto">
+                        <p class="card-text fw-bold text-primary mb-2" style="font-size: 1.25rem;">
+                            ${{ product.price|floatformat:2 }}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                {% if product.stock > 0 %}
+                                    <i class="fas fa-check-circle text-success"></i> In Stock
+                                {% else %}
+                                    <i class="fas fa-times-circle text-danger"></i> Out of Stock
+                                {% endif %}
+                            </small>
+                            <a href="{% url 'product_detail' product.slug %}" class="btn btn-primary btn-sm">
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Categories Section -->
+{% if categories %}
+<section class="container my-5">
+    <h2 class="section-title">Shop by Category</h2>
+    <div class="row g-4">
+        {% for category in categories %}
+        <div class="col-md-4 col-lg-4">
+            <div class="card feature-card text-center p-4">
+                <div class="card-body">
+                    <i class="fas fa-folder-open feature-icon"></i>
+                    <h4 class="card-title">{{ category.name }}</h4>
+                    {% if category.description %}
+                        <p class="card-text">{{ category.description|truncatewords:20 }}</p>
+                    {% endif %}
+                    <a href="{% url 'product_list' %}?category={{ category.id }}" class="btn btn-outline-primary">
+                        Browse Category
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Call to Action Section -->
+<section class="hero-section" style="padding: 60px 0; margin-top: 60px;">
+    <div class="container text-center">
+        <h2 style="font-size: 2.5rem; margin-bottom: 20px;">Ready to Start Shopping?</h2>
+        <p style="font-size: 1.2rem; margin-bottom: 30px;">Browse our extensive collection of products and find exactly what you need.</p>
+        <a href="{% url 'product_list' %}" class="btn btn-light btn-hero">
+            <i class="fas fa-shopping-bag me-2"></i>Explore Products
+        </a>
+    </div>
+</section>
+{% endblock %}
+
