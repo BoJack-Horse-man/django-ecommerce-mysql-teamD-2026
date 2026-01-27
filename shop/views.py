@@ -252,7 +252,21 @@ def user_profile(request):
         'orders': orders,
     }
     return render(request, 'shop/user_profile.html', context)
+@login_required
+def user_profile(request):
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profile photo updated!")
+            return redirect('user_profile')
+    else:
+        form = UserProfileForm(instance=profile)
 
+    orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    context = {'profile': profile, 'form': form, 'orders': orders}
+    return render(request, 'shop/user_profile.html', context)
 @login_required
 def fake_pay(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)

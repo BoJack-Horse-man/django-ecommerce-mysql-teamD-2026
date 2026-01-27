@@ -26,6 +26,7 @@ urlpatterns = [
     # Product Routes (generic slug MUST be last!)
     path('', views.product_list, name='product_list'),
     path('<slug:slug>/', views.product_detail, name='product_detail'),
+    path('profile/', views.user_profile, name='user_profile'),
 ]
 
 # Serve media files during development (only when DEBUG=True)
