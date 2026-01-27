@@ -39,9 +39,9 @@ Key focus:
 
 1. Start XAMPP (Apache + MySQL)
 2. Clone the repository:
-3. 3. Create & activate virtual environment:
-4. 4. Install dependencies:
-5. (or manually: `pip install django==4.2.16 pymysql Pillow`)
+3.  Create & activate virtual environment:
+4.  Install dependencies:
+ (or manually: `pip install django==4.2.16 pymysql Pillow`)
 5. Apply migrations:
 6.  Create superuser (for admin):  (\ecommerce-django-2026> python manage.py createsuperuser
 Username (leave blank to use defult)
@@ -49,7 +49,7 @@ Email address:
 Password: )
 
 7. Run the development server:
-8. 8. Open in browser:
+8.  Open in browser:
 - http://127.0.0.1:8000/ → Product catalog
 - http://127.0.0.1:8000/admin/ → Admin panel
 - http://127.0.0.1:8000/cart/ → Cart
@@ -72,7 +72,7 @@ Password: )
 
 ## License
 
-MIT License – see LICENSE file 
+Feel free to use it
 
 ## Contact
 
