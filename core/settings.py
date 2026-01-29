@@ -1,10 +1,3 @@
-import pymysql
-
-pymysql.install_as_MySQLdb()
-pymysql.version_info = (2, 2, 1, 'final', 0)  # Bypass the version check
-
-# ... rest of settings.py ...
-
 """
 Django settings for core project.
 
@@ -18,6 +11,8 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,12 +22,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-=nldm()++nf6*&5#4yhl4xon96%yjxe7)!#yeunhmv87tyxo3n'
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY",
+    "dev-secret-change-me"  # safe only for local development
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() == "true"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get(
+    "DJANGO_ALLOWED_HOSTS",
+    "localhost,127.0.0.1"
+).split(",")
 
 
 LOGIN_URL = '/admin/login/'  # uses Django admin login for simplicity
@@ -83,22 +84,27 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
+# In development we default to local MySQL (XAMPP as per course spec).
+# In production (Railway) we prefer DATABASE_URL (typically PostgreSQL).
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ecommerce_db',
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
+        'NAME': os.environ.get('MYSQL_DATABASE', 'ecommerce_db'),
+        'USER': os.environ.get('MYSQL_USER', 'root'),
+        'PASSWORD': os.environ.get('MYSQL_PASSWORD', ''),
+        'HOST': os.environ.get('MYSQL_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('MYSQL_PORT', '3306'),
         'OPTIONS': {
             'charset': 'utf8mb4',
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
         },
     }
 }
+
+database_url = os.environ.get("DATABASE_URL")
+if database_url:
+    # Override default DB when DATABASE_URL is present (e.g., Railway Postgres)
+    DATABASES["default"] = dj_database_url.parse(database_url, conn_max_age=600, ssl_require=False)
 
 
 # Password validation

@@ -1,0 +1,197 @@
+AI‑Native E‑Commerce Project – Code & Architecture Report
+=========================================================
+
+Project: Django E‑Commerce Store
+Repository root: E:\code\7thseme\ecommerce-django-2026
+Team: D
+
+1. High‑Level Architecture
+--------------------------
+- Frameworks & stack:
+  - Backend: Django 4.2.16, Python 3.13
+  - Database: MySQL (via XAMPP) using Django ORM
+  - Frontend: Django templates + Bootstrap 5 + Font Awesome
+  - Environment: Virtualenv (`venv`), dependencies in `requirements.txt`
+- Apps & modules:
+  - `core`: global configuration (`settings.py`), URL routing (`urls.py`), WSGI/ASGI entry points.
+  - `shop`: domain logic for catalog, cart, orders, user profiles, wishlist, reviews, newsletter, product requests, and informational pages.
+- Media handling:
+  - `media/products/` – product images
+  - `media/users/` – user profile photos
+  - `media/reviews/` – review photos
+  - `media/product_requests/` – reference images uploaded with product requests
+
+2. Domain Model Overview (shop/models.py)
+-----------------------------------------
+- `UserProfile`
+  - One‑to‑one extension of Django’s `User` for photo, phone, and address.
+  - Business logic: keeps authentication concerns in `User` and customer profile data in a separate table.
+  - Side effects: created lazily via `get_or_create` in the profile view the first time a user opens their profile.
+- `Category`
+  - `name`, SEO‑friendly `slug`, optional `description`, optional `image`.
+  - `save()` auto‑generates slug from name; admin prepopulates slug on the fly.
+  - Used to filter and organize products on the listing and home pages.
+- `Product`
+  - Fields: `name`, unique `slug`, `description` + `short_description`, `price` (Decimal), `stock` (non‑negative int), `image`, `category`, `featured`, timestamps.
+  - Methods: `is_in_stock()` and `get_average_rating()` aggregate over related reviews.
+  - Indexes: optimized for category/featured and recency queries.
+- `Order` & `OrderItem`
+  - `Order`: user, `total_price`, `status` with lifecycle (pending/shipped/delivered/cancelled), shipping address, phone, notes, timestamps.
+  - `OrderItem`: link to `Order` and `Product`, quantity, `price_at_purchase` snapshot.
+  - Business logic: checkout view creates an `Order` transactionally, creates items, decrements stock, and writes final totals.
+- `ProductReview`
+  - Links user ↔ product with 1–5 star `rating`, `title`, `comment`, optional `image`, `verified_purchase`, `helpful_count`, timestamps.
+  - Constraint: `unique_together (product, user)` ensures one review per user per product.
+  - Used to compute average ratings in product detail, product list (rating sort), and homepage “Top Rated”.
+- `Wishlist`
+  - Simple mapping of user ↔ product with uniqueness per pair; powers wishlist views and product detail save/remove buttons.
+- `NewsletterSubscriber`
+  - Email address, subscribed flag, subscribe/unsubscribe timestamps; used by subscribe/unsubscribe endpoints with idempotent behavior.
+- `ProductRequest`
+  - Fields: `user`, `product_name`, `details`, optional `desired_price`, optional `reference_image`, `status` (new/reviewing/approved/rejected), timestamps.
+  - Purpose: lets customers request products not yet listed; admin can track and update status via dedicated admin UI.
+
+3. Core Behaviors (shop/views.py)
+---------------------------------
+- Home page – `home`
+  - Inputs: anonymous or authenticated HTTP GET.
+  - Logic:
+    - Loads `featured_products` (in‑stock and marked `featured=True`).
+    - Loads `new_products` (latest in‑stock) and `top_products` (highest `avg_rating` and `total_reviews`).
+    - Loads a limited set of `categories` for quick navigation.
+    - Uses session‑based “recently_viewed” product IDs to show personalized suggestions if available.
+  - Outputs: renders `shop/home.html` with all sections hidden gracefully when querysets are empty.
+- Catalog – `product_list`
+  - Inputs: optional `q` (search), `category`, `min_price`, `max_price`, `sort`, `page`.
+  - Logic:
+    - Filters by in‑stock products.
+    - Applies case‑insensitive keyword search across name, description, short description using `Q` objects.
+    - Validates and applies numeric price range filters.
+    - Supports sort: by price (low/high), name, newest, rating (via `avg_rating` annotation).
+    - Uses Django `Paginator` (12 per page) with safe fallbacks for invalid/out‑of‑range pages.
+  - Outputs: `shop/product_list.html` for a professional, filterable product grid.
+- Product detail – `product_detail`
+  - Inputs: URL `slug`.
+  - Logic:
+    - `get_object_or_404(Product, slug=slug)` ensures 404 for missing products.
+    - Maintains “recently viewed” list in session (up to 10 items).
+    - Computes `related_products` in same category, excluding the current item.
+    - Loads `reviews` and `review_stats` (average rating, count).
+    - Determines `in_wishlist` (for logged‑in users) and `can_review` (user has purchased but not yet reviewed).
+  - Outputs: `shop/product_detail.html`, including:
+    - Main image or placeholder, full description, stock info.
+    - Average star rating and total reviews.
+    - Add‑to‑cart quantity form, wishlist add/remove, and link to write a review when `can_review` is true.
+- Cart & checkout – `add_to_cart`, `cart_summary`, `cart_update`, `checkout`, `order_confirmation`, `fake_pay`
+  - Session‑based cart dictionary keyed by product ID, with helpers `get_cart` and `save_cart`.
+  - `add_to_cart`: validates quantity and stock before updating the session; shows success/error messages.
+  - `cart_summary`: reconstructs product data and totals from session; removes invalid items defensively.
+  - `checkout` (login required, transactional):
+    - Validates non‑empty cart.
+    - Wraps order creation and stock updates in `transaction.atomic()` to ensure all‑or‑nothing semantics.
+    - Creates `Order` and `OrderItem` rows, decrements stock, calculates final total, clears cart, and redirects to `order_confirmation`.
+  - `fake_pay`: simple demonstration endpoint that marks an order as shipped once (simulated payment).
+- User account – `register`, `user_profile`, password change
+  - `register`:
+    - Uses `RegisterForm` (extending `UserCreationForm`) to capture username, email, phone, and address.
+    - On success, creates a `UserProfile` for phone/address, logs in user, redirects to `home`.
+  - `user_profile` (login required):
+    - Ensures profile row via `get_or_create`.
+    - Handles two forms in one view using `form_name` to separate concerns:
+      - `UserUpdateForm` for first/last name, email.
+      - `UserProfileForm` for photo, phone, address (with file upload).
+    - Displays recent orders, wishlist items, and product requests in read‑only cards and tables.
+  - Password change:
+    - `core/urls.py` wires Django’s `PasswordChangeView` and `PasswordChangeDoneView` with custom templates.
+    - Behavior: validates old password, enforces new password rules, updates hash, and shows clear success feedback.
+- Wishlist – `wishlist`, `add_to_wishlist`, `remove_from_wishlist`
+  - All endpoints require login.
+  - `add_to_wishlist`: POST‑only; uses `get_or_create` to avoid duplicates; returns status messages if item already exists.
+  - `wishlist`: lists all saved products for the user with stock and price info.
+  - `remove_from_wishlist`: POST‑only; deletes the mapping and redirects back to product page.
+- Reviews – `add_review`
+  - Enforces verified purchase and one‑review‑per‑user rules before allowing form submission.
+  - On valid POST, saves rating/comment/image and marks as `verified_purchase=True`.
+  - Renders `add_review.html` with validation messages when needed.
+- Product requests – `product_requests`
+  - Login required.
+  - On POST: validates `ProductRequestForm`, sets `pr.user` to current user, then saves.
+  - Displays all of the user’s product requests with status and a link to view the reference image.
+
+4. Templates & UI
+-----------------
+- Base layout – `base.html`
+  - Bootstrap 5 and Font Awesome included via CDN.
+  - Responsive navbar with links to Home, Products, Request Product (for authenticated users), Contact, Cart, Login/Register/Profile/Logout.
+  - Global messages (`django.contrib.messages`) rendered under navbar.
+  - Footer with contact details and social icons.
+- Authentication templates – `registration/login.html`, `registration/register.html`, `registration/password_change_form.html`, `registration/password_change_done.html`
+  - Styled forms with Bootstrap classes and inline error display.
+  - Password change templates integrate seamlessly with base layout and profile navigation.
+- Catalog & purchase flow – `home.html`, `product_list.html`, `product_detail.html`, `cart_summary.html`, `order_confirmation.html`
+  - `home.html`: hero section, “Why choose us” features, stats, featured products, new arrivals, top‑rated products, categories grid, final call‑to‑action.
+  - `product_list.html`: search/filter/sort controls; paginated grid layout with prices and stock badges.
+  - `product_detail.html`: detailed view with image, description, category, stock, rating summary, add‑to‑cart form, wishlist toggle, review list, and “Write a review” CTA.
+  - `cart_summary.html`/`order_confirmation.html`: clear line items, totals, and statuses with Bootstrap tables and badges.
+- Customer account & social features – `user_profile.html`, `wishlist.html`, `product_requests.html`, `add_review.html`
+  - `user_profile.html`: full customer dashboard with profile header, account & delivery forms, quick panels for wishlist and product requests, and order history table.
+  - `wishlist.html`: table of saved products with images, availability, and “View”/“Remove” actions.
+  - `product_requests.html`: form for submitting new product requests and a table showing request history and statuses.
+  - `add_review.html`: simple, focused review form referencing the associated product.
+- Informational pages – `contact_us.html`, `about_us.html`, `faq.html`
+  - `contact_us.html`: professionally styled contact form plus alternate contact methods; uses POST/redirect/GET and server‑side validation.
+  - `about_us.html`: explains store mission and guarantees.
+  - `faq.html`: accordions of common questions; content supplied from view as a Python list for easy editing.
+
+5. Admin Configuration (shop/admin.py)
+--------------------------------------
+- Registers all domain models with descriptive `ModelAdmin` classes:
+  - `UserProfileAdmin`: list and filter by user and phone; read‑only timestamps.
+  - `CategoryAdmin`: slug prepopulation, product count computed via related manager.
+  - `ProductAdmin`: image preview, quick edit of `featured` and `stock`, grouped fieldsets.
+  - `OrderAdmin` + `OrderItemInline`: inline items, bulk actions for status transitions, read‑only totals.
+  - `OrderItemAdmin`: derived subtotal field for convenience.
+  - `ProductReviewAdmin`: rating and verification filters, read‑only timestamps.
+  - `WishlistAdmin` and `NewsletterSubscriberAdmin`: simple searchable views plus subscribe/unsubscribe actions.
+  - `ProductRequestAdmin`: end‑to‑end visibility of user requests with status editing directly from the list view.
+
+6. Mental Execution & Rubric Alignment
+--------------------------------------
+- Mental Execution (ME.log.md):
+  - Contains narrative explanations for each major model and view, plus a dedicated section for new sprint code (password change, wishlist, reviews, product requests, home page sections, admin config).
+  - For each AI‑generated block, the ME log documents business logic, exception paths, side effects, and hallucination checks.
+- PQS (Project Quality Score) targets:
+  - Code quality:
+    - Strong separation of concerns between models, views, templates, and admin.
+    - Use of Django helpers (`get_object_or_404`, `transaction.atomic`, `login_required`, `require_POST`) to prevent common bugs.
+  - Testability:
+    - Views are mostly free of side effects beyond DB writes and session updates, making them amenable to request‑factory or client tests.
+    - Business rules (e.g., review eligibility, wishlist uniqueness, order stock checks) are encapsulated in query conditions that can be unit‑tested.
+  - Documentation:
+    - `ME.log.md` and this `code_report.txt` provide an auditable trail of AI‑assisted development and mental execution.
+- ICA & AI_Skill:
+  - Commit‑level contributions, code ownership, and PR comments can be correlated with ME entries tagged by date and module.
+  - The design of the `ME.log.md` and this report is explicitly aligned with the rubric’s requirements for problem understanding, V&V, process recording, and prompt‑to‑code efficiency.
+
+7. How to Run & Evaluate
+------------------------
+1. Environment setup (Windows PowerShell, project root `E:\code\7thseme\ecommerce-django-2026`):
+   - `python -m venv venv`
+   - `.\venv\Scripts\Activate.ps1`
+   - `pip install -r requirements.txt`
+2. Database:
+   - Start MySQL in XAMPP.
+   - `python manage.py migrate`
+   - `python manage.py createsuperuser`
+3. Run server:
+   - `python manage.py runserver`
+   - Open `http://127.0.0.1:8000/` in a browser.
+4. Functional walkthrough:
+   - Register a new user, complete profile, change password.
+   - Browse products, add to cart, checkout, and view order confirmation.
+   - Add items to wishlist, submit a product request, and create a product review.
+   - As admin, log into `/admin/` to confirm visibility and manage product requests, orders, and reviews.
+
+For detailed line‑by‑line reasoning of AI‑generated code, see `ME.log.md` in the project root.
+
+
