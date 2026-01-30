@@ -21,10 +21,13 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("true", "1", "yes")
 
-ALLOWED_HOSTS = os.environ.get(
-    "DJANGO_ALLOWED_HOSTS",
-    "localhost,127.0.0.1,127.0.0.1:8000,[::1]"
-).split(",")
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",")
+
+if DEBUG:
+    ALLOWED_HOSTS = ['*']  # safe for local dev + Railway testing
+else:
+    # production hosts (set via env on Railway)
+    ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "web-production-03ccd.up.railway.app").split(",")
 
 # ─── Media (images) ─────────────────────────────────────────────────────
 MEDIA_URL = '/media/'
@@ -75,6 +78,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # ─── DATABASE ───────────────────────────────────────────────────────────
 # Default: local XAMPP MySQL
 # Database - works locally (XAMPP MySQL) and Railway (Postgres)
+# Database – local XAMPP MySQL by default, Railway Postgres via DATABASE_URL
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -90,7 +94,7 @@ DATABASES = {
     }
 }
 
-# Railway Postgres override (takes precedence if DATABASE_URL exists)
+# Railway Postgres override (takes priority when DATABASE_URL is set)
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
     DATABASES['default'] = dj_database_url.config(
@@ -98,6 +102,7 @@ if DATABASE_URL:
         conn_max_age=600,
         ssl_require=True
     )
+
 # ─── Password validation ────────────────────────────────────────────────
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
