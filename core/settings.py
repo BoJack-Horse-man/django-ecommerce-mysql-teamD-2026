@@ -102,7 +102,7 @@ if DATABASE_URL:
     DATABASES['default'] = dj_database_url.config(
         default=DATABASE_URL,
         conn_max_age=600,
-        ssl_require=False  # Railway Postgres uses SSL but dj_database_url handles it
+        ssl_require=True  # Railway Postgres uses SSL but dj_database_url handles it
     )
 
 # ─── Password validation ────────────────────────────────────────────────
@@ -137,7 +137,7 @@ def cart_count(request):
 
 # For production (Railway)
 CSRF_TRUSTED_ORIGINS = [
-    'https://web-production-03ccd.up.railway.app/',          # exact domain from Railway dashboard
+    'https://web-production-03ccd.up.railway.app',          # exact domain from Railway dashboard
     'https://*.up.railway.app',                      # wildcard for subdomains if needed
     'https://*.railway.app',                         # broader wildcard (works for most Railway apps)
 ]
