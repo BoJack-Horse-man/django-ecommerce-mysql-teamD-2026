@@ -12,49 +12,40 @@ import pymysql
 # Use PyMySQL as MySQLdb (for local XAMPP compatibility)
 pymysql.install_as_MySQLdb()
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY",
     "django-insecure-your-dev-secret-change-me-for-production"
 )
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("true", "1", "yes")
 
-# Hosts – read from env, fallback for local + Railway testing
 ALLOWED_HOSTS = os.environ.get(
     "DJANGO_ALLOWED_HOSTS",
     "localhost,127.0.0.1,127.0.0.1:8000,[::1],*.railway.app,*.up.railway.app"
 ).split(",")
 
 if DEBUG:
-    ALLOWED_HOSTS = ["*"]  # safe for local dev / Railway testing
+    ALLOWED_HOSTS = ["*"]
 
-# CSRF trusted origins (required for HTTPS on Railway)
 CSRF_TRUSTED_ORIGINS = os.environ.get(
     "CSRF_TRUSTED_ORIGINS",
     "https://*.railway.app,https://*.up.railway.app"
 ).split(",")
 
-# Secure settings for Railway (HTTPS proxy) – only enable when not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 SECURE_SSL_REDIRECT = not DEBUG
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-# Media (images)
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-# Static files
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"] if (BASE_DIR / "static").exists() else []
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# Application definition
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -88,7 +79,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "shop.context_processors.cart_count",  # optional – for cart count in navbar
+                "shop.context_processors.cart_count",
             ],
         },
     },
@@ -97,7 +88,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "core.wsgi.application"
 
 # ────────────────────────────────────────────────────────────────────────
-#  DATABASE – works both locally (MySQL) and on Railway (Postgres)
+#  DATABASE CONFIG – local MySQL (XAMPP) or Railway Postgres
 # ────────────────────────────────────────────────────────────────────────
 
 DATABASES = {
@@ -115,13 +106,13 @@ DATABASES = {
     }
 }
 
-# Railway Postgres override – this MUST come AFTER the default block
+# Railway Postgres – OVERRIDE EVERYTHING if DATABASE_URL exists
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
     DATABASES['default'] = dj_database_url.config(
         default=DATABASE_URL,
         conn_max_age=600,
-        ssl_require=True  # Railway enforces SSL
+        ssl_require=True
     )
 
 # Password validation
@@ -132,17 +123,14 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# Internationalization
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Asia/Singapore"
 USE_I18N = True
 USE_TZ = True
 
-# Login / Auth Redirects
 LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/cart/"
 
-# Optional: Custom context processors (cart count in every template)
 def cart_count(request):
     cart = request.session.get("cart", {})
     return {"cart_count": sum(cart.values())}
