@@ -21,32 +21,32 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("true", "1", "yes")
 
-# Hosts – read from env, fallback to Railway defaults
+# ─── Hosts ──────────────────────────────────────────────────────────────
 ALLOWED_HOSTS = os.environ.get(
     "DJANGO_ALLOWED_HOSTS",
     ".railway.app,web-production-03ccd.up.railway.app"
 ).split(",")
 
 if DEBUG:
-    ALLOWED_HOSTS = ["*"]  # for local dev / testing
+    ALLOWED_HOSTS = ["*"]
 
-# CSRF trusted origins – read from env, fallback to Railway
+# ─── CSRF trusted origins ───────────────────────────────────────────────
 CSRF_TRUSTED_ORIGINS = os.environ.get(
     "CSRF_TRUSTED_ORIGINS",
     "https://web-production-03ccd.up.railway.app,https://*.up.railway.app,https://*.railway.app"
 ).split(",")
 
-# Secure settings for Railway (HTTPS proxy)
+# Secure settings for Railway HTTPS proxy
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_SSL_REDIRECT = True
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")  # Tells Django it's behind HTTPS proxy
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-# Media (images)
+# ─── Media ──────────────────────────────────────────────────────────────
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-# Application definition
+# ─── Application definition ─────────────────────────────────────────────
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -80,7 +80,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "shop.context_processors.cart_count",  # optional
+                "shop.context_processors.cart_count",
             ],
         },
     },
@@ -88,7 +88,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "core.wsgi.application"
 
-# Database – local XAMPP MySQL by default, Railway Postgres via DATABASE_URL
+# ─── Database ───────────────────────────────────────────────────────────
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
@@ -104,16 +104,15 @@ DATABASES = {
     }
 }
 
-# Override with Railway Postgres if DATABASE_URL is present
 DATABASE_URL = os.environ.get("DATABASE_URL")
 if DATABASE_URL:
     DATABASES["default"] = dj_database_url.config(
         default=DATABASE_URL,
         conn_max_age=600,
-        ssl_require=True,  # Railway enforces SSL
+        ssl_require=True,
     )
 
-# Password validation
+# ─── Password validation ────────────────────────────────────────────────
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -121,25 +120,24 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# Internationalization
+# ─── Internationalization ───────────────────────────────────────────────
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Asia/Singapore"
 USE_I18N = True
 USE_TZ = True
 
-# Static files
+# ─── Static files ───────────────────────────────────────────────────────
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# Optional custom static dirs
 if (BASE_DIR / "static").exists():
     STATICFILES_DIRS = [BASE_DIR / "static"]
 
-# Login / Auth Redirects
+# ─── Login / Auth Redirects ─────────────────────────────────────────────
 LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/cart/"
 
-# Optional: Custom context processors
+# ─── Custom context processors ──────────────────────────────────────────
 def cart_count(request):
     cart = request.session.get("cart", {})
     return {"cart_count": sum(cart.values())}
