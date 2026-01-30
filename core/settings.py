@@ -9,7 +9,7 @@ from pathlib import Path
 import dj_database_url
 import pymysql
 
-# ─── Use PyMySQL as MySQLdb (for local XAMPP compatibility) ───────
+# Use PyMySQL as MySQLdb (for local XAMPP compatibility)
 pymysql.install_as_MySQLdb()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -24,7 +24,7 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("true", "1", "yes")
 
-# Hosts – flexible for local + Railway
+# Hosts – read from env, fallback for local + Railway testing
 ALLOWED_HOSTS = os.environ.get(
     "DJANGO_ALLOWED_HOSTS",
     "localhost,127.0.0.1,127.0.0.1:8000,[::1],*.railway.app,*.up.railway.app"
@@ -39,7 +39,7 @@ CSRF_TRUSTED_ORIGINS = os.environ.get(
     "https://*.railway.app,https://*.up.railway.app"
 ).split(",")
 
-# Secure settings for Railway (HTTPS proxy)
+# Secure settings for Railway (HTTPS proxy) – only enable when not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 SECURE_SSL_REDIRECT = not DEBUG
@@ -101,24 +101,24 @@ WSGI_APPLICATION = "core.wsgi.application"
 # ────────────────────────────────────────────────────────────────────────
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": os.environ.get("MYSQL_DATABASE", "ecommerce_db"),
-        "USER": os.environ.get("MYSQL_USER", "root"),
-        "PASSWORD": os.environ.get("MYSQL_PASSWORD", ""),
-        "HOST": os.environ.get("MYSQL_HOST", "127.0.0.1"),
-        "PORT": os.environ.get("MYSQL_PORT", "3306"),
-        "OPTIONS": {
-            "charset": "utf8mb4",
-            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.environ.get('MYSQL_DATABASE', 'ecommerce_db'),
+        'USER': os.environ.get('MYSQL_USER', 'root'),
+        'PASSWORD': os.environ.get('MYSQL_PASSWORD', ''),
+        'HOST': os.environ.get('MYSQL_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('MYSQL_PORT', '3306'),
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
         },
     }
 }
 
-# Railway / production override – this MUST be the LAST database config
-DATABASE_URL = os.environ.get("DATABASE_URL")
+# Railway Postgres override – this MUST come AFTER the default block
+DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
-    DATABASES["default"] = dj_database_url.config(
+    DATABASES['default'] = dj_database_url.config(
         default=DATABASE_URL,
         conn_max_age=600,
         ssl_require=True  # Railway enforces SSL
