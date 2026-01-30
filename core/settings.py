@@ -7,7 +7,7 @@ from pathlib import Path
 import dj_database_url
 import pymysql
 
-# ─── Use PyMySQL as MySQLdb (for local XAMPP compatibility) ───────
+# Use PyMySQL as MySQLdb (for local XAMPP compatibility)
 pymysql.install_as_MySQLdb()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,20 +21,20 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("true", "1", "yes")
 
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",")
-ALLOWED_HOSTS = ['.railway.app', 'web-production-03ccd.up.railway.app', '*']  # or more specific
+# Hosts – simplified for Railway
+ALLOWED_HOSTS = [
+    '.railway.app',
+    'web-production-03ccd.up.railway.app',
+]
 
 if DEBUG:
-    ALLOWED_HOSTS = ['*']  # safe for local dev + Railway testing
-else:
-    # production hosts (set via env on Railway)
-    ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "web-production-03ccd.up.railway.app").split(",")
+    ALLOWED_HOSTS = ['*']  # for local development & testing
 
-# ─── Media (images) ─────────────────────────────────────────────────────
+# Media (images)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# ─── Application definition ─────────────────────────────────────────────
+# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -76,10 +76,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-# ─── DATABASE ───────────────────────────────────────────────────────────
-# Default: local XAMPP MySQL
-# Database - works locally (XAMPP MySQL) and Railway (Postgres)
-# Database – local XAMPP MySQL by default, Railway Postgres via DATABASE_URL
 # Database – local XAMPP MySQL by default, Railway Postgres via DATABASE_URL
 DATABASES = {
     'default': {
@@ -96,16 +92,16 @@ DATABASES = {
     }
 }
 
-# If Railway provides DATABASE_URL (Postgres), use it instead (this block must come last)
+# Override with Railway Postgres if DATABASE_URL exists
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
     DATABASES['default'] = dj_database_url.config(
         default=DATABASE_URL,
         conn_max_age=600,
-        ssl_require=True  # Railway Postgres uses SSL but dj_database_url handles it
+        ssl_require=True,  # Railway enforces SSL
     )
 
-# ─── Password validation ────────────────────────────────────────────────
+# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -113,31 +109,37 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# ─── Internationalization ───────────────────────────────────────────────
+# Internationalization
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Asia/Singapore'
 USE_I18N = True
 USE_TZ = True
 
-# ─── Static files ───────────────────────────────────────────────────────
+# Static files
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-# Only add STATICFILES_DIRS if the directory exists (optional for custom static files)
+
+# Only add STATICFILES_DIRS if the directory exists
 if (BASE_DIR / 'static').exists():
     STATICFILES_DIRS = [BASE_DIR / 'static']
 
-# ─── Login / Auth Redirects ─────────────────────────────────────────────
+# Login / Auth Redirects
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/cart/'
 
-# ─── Optional: Custom context processors ────────────────────────────────
+# Secure cookies & CSRF for production (Railway uses HTTPS)
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_SSL_REDIRECT = not DEBUG
+
+# CSRF trusted origins – critical for admin login on Railway
+CSRF_TRUSTED_ORIGINS = [
+    'https://web-production-03ccd.up.railway.app',
+    'https://*.up.railway.app',
+    'https://*.railway.app',
+]
+
+# Optional: Custom context processors
 def cart_count(request):
     cart = request.session.get('cart', {})
     return {'cart_count': sum(cart.values())}
-
-# For production (Railway)
-CSRF_TRUSTED_ORIGINS = [
-    'https://web-production-03ccd.up.railway.app',          # exact domain from Railway dashboard
-    'https://*.up.railway.app',                      # wildcard for subdomains if needed
-    'https://*.railway.app',                         # broader wildcard (works for most Railway apps)
-]
