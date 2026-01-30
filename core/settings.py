@@ -74,6 +74,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 # ─── DATABASE ───────────────────────────────────────────────────────────
 # Default: local XAMPP MySQL
+# Database - works locally (XAMPP MySQL) and Railway (Postgres)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -89,7 +90,7 @@ DATABASES = {
     }
 }
 
-# Railway / production override: use DATABASE_URL (Postgres)
+# Railway Postgres override (takes precedence if DATABASE_URL exists)
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL:
     DATABASES['default'] = dj_database_url.config(
@@ -97,7 +98,6 @@ if DATABASE_URL:
         conn_max_age=600,
         ssl_require=True
     )
-
 # ─── Password validation ────────────────────────────────────────────────
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
