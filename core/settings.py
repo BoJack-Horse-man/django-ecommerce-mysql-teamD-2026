@@ -12,16 +12,14 @@ pymysql.install_as_MySQLdb()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY",
     "django-insecure-your-dev-secret-change-me-for-production"
 )
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("true", "1", "yes")
 
-# ─── Hosts ──────────────────────────────────────────────────────────────
+# Hosts and origins from env (fallback to Railway defaults)
 ALLOWED_HOSTS = os.environ.get(
     "DJANGO_ALLOWED_HOSTS",
     ".railway.app,web-production-03ccd.up.railway.app"
@@ -30,23 +28,21 @@ ALLOWED_HOSTS = os.environ.get(
 if DEBUG:
     ALLOWED_HOSTS = ["*"]
 
-# ─── CSRF trusted origins ───────────────────────────────────────────────
 CSRF_TRUSTED_ORIGINS = os.environ.get(
     "CSRF_TRUSTED_ORIGINS",
     "https://web-production-03ccd.up.railway.app,https://*.up.railway.app,https://*.railway.app"
 ).split(",")
 
-# Secure settings for Railway HTTPS proxy
+# Secure settings for Railway (HTTPS proxy)
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_SSL_REDIRECT = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-# ─── Media ──────────────────────────────────────────────────────────────
+# Media
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-# ─── Application definition ─────────────────────────────────────────────
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -88,7 +84,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "core.wsgi.application"
 
-# ─── Database ───────────────────────────────────────────────────────────
+# Database
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
@@ -112,7 +108,6 @@ if DATABASE_URL:
         ssl_require=True,
     )
 
-# ─── Password validation ────────────────────────────────────────────────
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -120,24 +115,20 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# ─── Internationalization ───────────────────────────────────────────────
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Asia/Singapore"
 USE_I18N = True
 USE_TZ = True
 
-# ─── Static files ───────────────────────────────────────────────────────
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 if (BASE_DIR / "static").exists():
     STATICFILES_DIRS = [BASE_DIR / "static"]
 
-# ─── Login / Auth Redirects ─────────────────────────────────────────────
 LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/cart/"
 
-# ─── Custom context processors ──────────────────────────────────────────
 def cart_count(request):
     cart = request.session.get("cart", {})
     return {"cart_count": sum(cart.values())}
